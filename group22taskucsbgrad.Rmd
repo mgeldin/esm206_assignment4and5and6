@@ -1,0 +1,44 @@
+---
+title: "Group 22 UCSB Domestic Grad Enrollment"
+author: "Alessandra Puig-Santana, Michelle Geldin "
+date: "11/14/2021"
+output: html_document
+---
+### Overview
+
+The following report will explore the changes in ethnicity composition for UCSB graduate students between the years 2008 and 2019. Data utilized for this exploration and analysis are derived from the UCSB Office of Budget and Planning. This data provides a wide amount of information including housing status, class level, grade point average, ethnicity percentages, and more. The data we used is limited to the numbers of graduate students per year and percentage of ethnic makeup per class per year.
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE }
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+# Attaching packages
+library(tidyverse)
+library(here)
+library(dplyr)
+
+```
+
+```{r}
+# Read in data
+ucsb_grad <- read_csv(here("data", "ucsb_grad_data.csv"))
+```
+```{r}
+# Scatterplot visualizing graduate student enrollment from 2008 to 2019.
+ggplot(data = ucsb_grad, aes(x = year_abbr, y = domestic_enrollment, fill = ethnicity)) +
+  geom_col(position = "fill") +
+  labs(x = "Year",
+       y = "Domestic Graduate Enrollment",
+       title = "UCSB Graduate Student Enrollment from 2008-2019") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+``` 
+
+
+
+**Figure 1:** The ethnicity of "White" is seen as the largest makeup of Domestic Graduate Student enrollment at UCSB throughout all years (2008 - 2019). Visual trends evident across the years include the decrease in counts of ethnicity "Unknown" and "Other", as well as an increase in counts of ethnicity "American Indian/ Alaskan", "Asian/ Pacific Islander", "Black/ African American", "Chicano", E. Indian/ Pakistani", "Filipino", and "Latino". While minority groups increased in count between 2008 and 2019, the decrease in "Unknown" and "Other" groups may produce a perceived ethnic increase for specific groups. Thus, we cannot successfully infer that minority population proportions increased in 2019 relative to 2008 levels without further investigating the data, as minority groups may have been present in the "Unknown" or "Other" categories earlier on in the data collection process.
+
+
+
+### Data Citation:
+
+https://bap.ucsb.edu/institutional-research/campus-profiles

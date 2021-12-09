@@ -1,0 +1,53 @@
+---
+title: "Visualizing Impacts on Mono Lake Water Levels Between 1850 to 2017"
+author: "Michelle Geldin"
+date: "11/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(here)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(kableExtra)
+library(ggbeeswarm)
+library(effsize)
+library(broom)
+```
+
+```{r, include = FALSE}
+mono <- read_csv(here("data", "mono_lake_annual_levels.csv"), skip = 5) %>%
+  clean_names()
+```
+
+
+```` {r}
+ggplot(data = mono, aes(x = year, y = lake_level_feet_above_sea_level)) +
+ geom_ribbon(data = mono %>%
+               filter(lake_level_feet_above_sea_level <= 6392), aes(ymin = lake_level_feet_above_sea_level, ymax = 6392), fill = "tomato" , alpha = 0.5) +
+ geom_line() +
+ scale_x_continuous(breaks = seq(from = 1850, to = 2017, by = 20)) +
+ geom_hline(yintercept = 6377, color = "orangered4", linetype = "twodash") +
+ annotate("text", x = 1880, y = 6379, label = "Emergence of land bridges (6377 ft)", color = "orangered4") +
+ geom_hline(yintercept = 6392, color = "springgreen4", linetype = "longdash") +
+ annotate("text", x = 1865, y = 6394, label = "Stable level (6392 ft)", color = "springgreen4") +
+ geom_hline(yintercept = 6350, color = "navy", linetype = "twodash") +
+ annotate("text", x = 1875, y = 6352, label = "Salinity above 150 g/L (6350 ft)", color = "navy") +
+ theme_classic() +
+ labs(x = "Year", y = "Mono Lake Water Level (ft above sea level)", title = "Mono Lake Water Level Changes between 1850 and 2017") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+ annotate("segment",
+          x = 1946, xend = 1941,
+          y = 6426, yend = 6418.5,
+          arrow = arrow(length = unit(2.5, "mm")),
+          colour = "firebrick3",
+          size = 0.5) +
+ annotate("text", x = 1968, y = 6426, size = 3, label = "LA DWP starts to divert water
+          from Mono Lake’s tributary streams", color = "firebrick3") +
+    theme(panel.background = element_rect(fill = "beige", color = "gainsboro")) +
+  theme(plot.background = element_rect(fill = "gainsboro", color = "gainsboro"))
+```
+
+Figure 1: The graph visualizes Mono Lake water levels over the period of 1850 to 2017. Notably, LA DWP diverting water from Mono Lake can be seen as a contributing factor to the period from 1964 until 2017 where water levels were below the indicated stable level. It can be seen that between 1977 to 1982 and 1989 to 1994, water levels in the lake were low enough to provide for land bridges that could give predators access to major bird nesting sites. The salinity line on the bottom of the graph demonstrates that if salinity levels were at this amount, the availability of brine shrimp and brine flies as food sources for the birds would be acutely impacted.

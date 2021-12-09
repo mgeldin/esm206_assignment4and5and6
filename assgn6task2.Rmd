@@ -1,0 +1,93 @@
+---
+title: "Analysis of Political Party Influence on Self-Identification as an Environmentalist"
+author: "Michelle Geldin"
+date: "11/30/2021"
+output:
+  html_document: 
+    theme: yeti
+    toc: yes
+---
+
+## Overview
+
+The data used for this report are from a survey conducted by Chelsea Batavia and Andrews Forest LTER to explore "Influences on charitable giving for conservation." The survey was conducted in August 2017 and yielded 1,331 individual respondents. This report will describe the association between respondents’ political affiliation (binned “conservative” or “liberal” by self-identification) and if they consider themselves an environmentalist by creating a finalized table of counts and proportions of "liberal" and "conservative" survey respondents. Additionally, this report will create a contingency table to perform a chi-square test for independence to answer: is there an association between political affiliation (conservative or liberal-leaning) and if a person considers themself an environmentalist. The final results show that there is a significant association between Political Party and identifying as an environmentalist.
+
+
+```{r setup, include=FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(here)
+library(janitor)
+library(broom)
+library(kableExtra)
+```
+
+```{r, include = FALSE}
+# Read in the data
+survey <- read_csv(here("data", "conservation_survey.csv"))
+```
+
+```{r, include = FALSE}
+# Make a subset of the data to only keep the variables "ENV_ID" and "POL_OR"
+survey_subset <- survey %>%
+  select("ENV_ID", "POL_OR") %>% # Now add a new column
+  clean_names()
+```
+
+
+ 
+```{r, include = FALSE}
+# put political parties into a binary response of either conservative or liberal
+
+conservation_survey_subset <- survey_subset %>%
+  mutate(Party = case_when(
+    pol_or %in% c("1", "2", "3") ~ "Conservative",
+    pol_or %in% c("5", "6", "7") ~ "Liberal")) %>%
+  drop_na() %>% 
+  mutate(env_id = case_when(
+   env_id == "1" ~ "Yes",
+   env_id == "2" ~ "No",
+   env_id == "3" ~ "Unsure")) %>%
+  mutate(env_id = factor(env_id, levels = c("Yes", "No", "Unsure")))
+
+survey_table <- conservation_survey_subset %>%
+  tabyl(Party, env_id)
+```
+
+```{r, message = FALSE, warning = FALSE}
+survey_table_props <- survey_table %>%
+  adorn_percentages() %>%
+  janitor::adorn_pct_formatting(digits = 2) %>%
+  adorn_ns()
+
+kable(head(survey_table_props),
+      caption = "<b> Table 1: Counts and Proportions of Survey Repondents by Political Party When Asked if they Consider Themselves an Environmentalist") %>%
+  kable_styling(bootstrap_options = "bordered", full_width = F)
+```
+
+```{r, include = FALSE}
+survey_table_props
+```
+
+
+```{r, include = FALSE}
+# use `column_to_rownames` to convert entries in a column to stored rownames
+survey_ct <- survey_table %>%
+  column_to_rownames(var = "Party")
+```
+
+```{r, include = FALSE}
+# Chi test
+survey_x2 <- chisq.test(survey_ct)
+survey_x2
+
+survey_tidy <- tidy(survey_x2)
+```
+There is a significant association between Political Party and identifying as an environmentalist ($\chi$^2^(`r survey_tidy$parameter`) = `r round(survey_tidy$statistic,2)`, *p* = `r round(survey_tidy$p.value, 3)`). 
+
+The true p value is very small as seen here: (*p* = `r (survey_tidy$p.value)`).
+
+
+## Data Citation
+
+Andrews Forest LTER Site and C. Batavia. 2019. Influences on charitable giving for conservation: Online survey data of 1,331 respondents across the US, August 2017 ver 3. Environmental Data Initiative. https://doi.org/10.6073/pasta/926e6270e324a1322a900da14d38b96c

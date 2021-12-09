@@ -1,0 +1,129 @@
+---
+title: "An Investigation into Female Lizard Lengths for Two Species from the Jornada Basin LTER"
+author: "Michelle Geldin"
+date: "11/30/2021"
+output:
+  html_document: 
+    theme: yeti
+    toc: yes
+---
+
+## Overview
+
+The Jornada Basin LTER dataset uses live pitfall traps checked once a week with sampling-with-replacement for lizards in order to data pertaining to the following variables: species, sex, recapture status, snout-vent length, total length, weight, and whether tail is broken or whole. This report will visualize female lizard lengths per selected species, will find the mean, standard deviation, and sample size for the two species, and will analyze t-test and Cohen's d results in order to answer the question of whether or not the difference in means between the two species is great enough to demonstrate that they are not from the same population. Through the analysis provided, we reject the null hypothesis and decide that the means are statistically too different to be from the same population. 
+
+
+```{r setup, include=FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(here)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(kableExtra)
+library(ggbeeswarm)
+library(effsize)
+library(broom)
+```
+
+```{r}
+# Read in the data
+lizards <- read_csv(here("data", "lizards.csv"))
+```
+
+```{r}
+# Wrangle the data
+lizards_subset <- lizards %>% 
+  select(spp, sex, total_length) %>%
+  filter(sex == "F") %>%
+  mutate(sex = case_when(
+    sex == "F" ~ "Female")) %>%
+  filter(spp %in% c("CNUN", "CNTE")) %>%
+    mutate(spp = case_when(
+      spp == "CNUN" ~ "Desert Grassland Lizard",
+      spp == "CNTE" ~ "Colorado Checkered Lizard"))
+```
+
+```{r}
+# Visualize the data
+ggplot(data = lizards_subset, aes(fill = spp, color = spp, x = spp, y = total_length)) +
+  geom_jitter() +
+  geom_boxplot(fill = NA) +
+  theme(panel.background = element_rect(fill = "beige", color = "blue")) +
+  theme(plot.background = element_rect(fill = "darkkhaki", color = "blue")) +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(legend.position = 'None') +
+  labs(x = "Species", y = "Lizard Length (millimeters)", title = "Comparison of Female Lizard Length by Species Type")
+```
+
+Figure 1: Female Lizard Length Comparison per Species. This comparison demonstrates that Female Colorado Checkered Lizards seem to have larger lengths on average as compared to Female Desert Grassland Lizards upon first glance.
+
+
+```{r, include = FALSE}
+lizards_stats <- lizards_subset %>%
+  group_by(spp) %>%
+  summarize(mean_total_length = round(mean(total_length, na.rm = TRUE), 2),
+            sd_total_length = round(sd(total_length, na.rm = TRUE), 2),
+            sample_size = sum(!is.na(total_length)))
+```
+
+
+
+```{r}
+lizards_stats %>%
+  kable(col.names = c("Lizard Species",
+                      "Mean Length (millimeters)",
+                      "Standard Deviation (millimeters)",
+                      "Sample Size (n)"),
+        caption = "<center> Table 1: Statistics Table of Female Lizard Length Comparison By Species. Data: Lightfoot, D. 2017") %>%
+  kable_styling(full_width = FALSE)
+```
+
+```{r, include = FALSE}
+cnunliz <- lizards_subset %>%
+  filter(spp == "Desert Grassland Lizard") %>%
+  drop_na(total_length) %>%
+  pull(total_length)
+
+cnteliz <- lizards_subset %>%
+  filter(spp == "Colorado Checkered Lizard") %>%
+  drop_na(total_length) %>%
+  pull(total_length)
+
+cnunliz_mean <- mean(cnunliz)
+
+cnteliz_mean <- mean(cnteliz)
+
+cnunliz_sd <- sd(cnunliz)
+
+cnteliz_sd <- sd(cnteliz)
+
+
+#t test
+t.liz <- t.test(cnunliz, cnteliz)
+
+tliz_tidy <- tidy(t.liz)
+#cohen test
+cohen.liz <- cohen.d(cnunliz, cnteliz)
+
+tliz_tidy
+cohen.liz
+```
+```{r, include = FALSE}
+hist(cnunliz)
+
+qqnorm(cnteliz)
+
+hist(cnunliz)
+
+qqnorm(cnteliz)
+```
+
+
+On average, Female Colorado Checkered Lizards have longer lengths (millimeters) than Female Desert Grassland Lizards (`r round(cnteliz_mean,2)` $\pm$ `r round(cnteliz_sd, 2)` and `r round(cnunliz_mean,2)` $\pm$ `r round(cnunliz_sd, 2)` g, respectively; mean $\pm$ 1 standard deviation). While the absolute difference in means is `r round(cnteliz_mean, 2) - round(cnunliz_mean, 2)` millimeters (a `r round((cnteliz_mean - cnunliz_mean)/((cnteliz_mean + cnunliz_mean)/2)*100, 2)`% difference), the difference in means is significant (Welch's two-sample t-test: t(`r round(tliz_tidy$parameter,2)`) = `r round(tliz_tidy$statistic,2)`, p < 0.001). While it is possible that the means could be from the same population, we reject the null hypothesis and decide that the means are too different to be from the same population because the p-value is smaller than our threshold of 0.05. The effect size is  (Cohen's *d* = `r round(cohen.liz$estimate,2)`) which indicates to us that there is a large effect size, indicating that there is a larger practical significance than statistical difference in effect size. QQ tests and histograms were run for both populations sets and a general trend of normality was determined. Thus, our t-test is a valid determination of the difference between the population means as our data is relatively normal in distribution.
+
+
+
+
+## Data Citation
+
+Lightfoot, D. 2017. Lizard pitfall trap data (LTER-II, LTER-III) ver 36. Environmental Data Initiative. https://doi.org/10.6073/pasta/ff37b4cace16a9943575f3fd7067064e 

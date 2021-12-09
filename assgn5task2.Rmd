@@ -1,0 +1,43 @@
+---
+title: "Group 22 CA Pollution Burden"
+author: "Michelle Geldin and Alessandra Puig-Santana"
+date: "11/14/2021"
+output: html_document
+---
+### Overview
+
+The following report utilizes CalEnviroScreen's Pollution Burden Score from CalEnviroScreen 3.0 in addition to Census data from 2010 to explore the percentage of the White population that is impacted by pollution burden. While CalEnviroScreen provides a wealth of information, only the Pollution Burden Score is used in this report.
+
+```{r setup, include=FALSE, warning = FALSE, message = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(gapminder)
+```
+
+```{r, warning = FALSE, message = FALSE}
+ces <- read_csv(here("data", "ces3demographics.csv")) %>%
+  clean_names
+```
+
+```{r gg-oz-gapminder, fig.cap = "Figure 1: CalEnviroScreen Pollution Burden Score Compared Against the Percentage of White Individuals"}
+# Creating a basic ggplot demonstrating the white population vs. CalEnviroScreen pollution burden score
+
+ggplot(data = ces, aes(x = white_percent,
+                       y = ces_3_0_score)) +
+  geom_hex() +
+  labs(x = "Percent White", 
+       y = "CalEnviroScreen Pollution Burden Score",
+       title = "Percentage of White population being affected by pollution") +
+  scale_fill_gradient(low = "peachpuff", high = "red4", name = "Count") +
+  theme_minimal()
+```
+
+### Analysis
+Figure 1 demonstrates a large spread in the percentage of white population being affected by multiple sources of pollution. Overall, this 2D hexbin demonstrates how there is a large percentage of the white population experiencing little to no pollution. 
+
+### Citation:
+CalEnviroScreen 3.0. 25 June 2018, https://oehha.ca.gov/calenviroscreen/report/calenviroscreen-30. 
+
+2010 Census Population and Housing Unit Counts. Issued Aug. 2012, https://www.census.gov/prod/cen2010/cph-2-6.pdf.
